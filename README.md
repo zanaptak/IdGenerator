@@ -50,7 +50,7 @@ BFKdJmcFNpBXhNNrRscZkSZJXNhTmMmTHJRhrZMx
 ### Timestamp
 
 * The default 40 bit timestamp has approximately 6.6 millisecond resolution. That is, ids generated within the same 6.6 ms interval will have the same timestamp portion. It has a range of over 228 years before cycling, good until the year 2247 (starting from 2019).
-* The time precision is configurable to increase or decrease the resolution, trading off random bits to do so. See [Adjustable time precision].
+* The time precision is configurable to increase or decrease the resolution, trading off random bits to do so. See [Adjustable time precision](#adjustable-time-precision).
 
 ### Random data
 
