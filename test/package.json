@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "fable-splitter ../src/IdGenerator.fsproj -o bld --commonjs",
+    "testApp": "node bld/Program.js",
+    "pretest": "fable-splitter -c config.js",
+    "test": "mocha bld -t 10000"
+  },
+  "dependencies": {
+    "@babel/core": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
+    "fable-compiler": "^2.3.24",
+    "fable-loader": "^2.1.8",
+    "fable-splitter": "^2.1.11",
+    "mocha": "^6.2.0"
+  }
+}

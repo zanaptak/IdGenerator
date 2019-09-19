@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
+    <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
+    <Version>0.1.0</Version>
+    <Authors>zanaptak</Authors>
+    <AssemblyName>Zanaptak.IdGenerator</AssemblyName>
+    <Product>Zanaptak.IdGenerator</Product>
+    <PackageId>Zanaptak.IdGenerator</PackageId>
+    <RepositoryUrl>https://github.com/zanaptak/IdGenerator.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/zanaptak/IdGenerator</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/zanaptak/IdGenerator/releases</PackageReleaseNotes>
+    <PackageTags>unique;id;generator;identifier;.net;fable</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Description>A unique id generator for .NET and Fable, using timestamp plus random data, with multiple strength and precision options. Flexible alternative to UUID/GUID.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="IdGenerator.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="*.fsproj; *.fs" PackagePath="fable\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Zanaptak.BinaryToTextEncoding" Version="0.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.3.4" />
+  </ItemGroup>
+
+</Project>
