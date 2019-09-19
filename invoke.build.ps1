@@ -29,6 +29,7 @@ task PackV Clean, Build, {
 
 task TestJs {
   Set-Location .\test
+  if ( -not ( Test-Path node_modules ) ) { exec { npm install } }
   remove bld
   exec { npm test }
 }

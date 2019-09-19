@@ -11,28 +11,28 @@ Generates universally unique string ids consisting of a sortable timestamp compo
 ### Small id
 
 ```
-BFKdJmcFtSqbSmrJ
+BBBbpQsdtSqbSmrJ
 [-time-][random]
 ```
 
 ### Medium id
 
 ```
-BFKdJmcFjMjrqhJxZPDhSstF
+BBBbpQsdjMjrqhJxZPDhSstF
 [-time-][----random----]
 ```
 
 ### Large id
 
 ```
-BFKdJmcFXsrJpKJdtCTNhCBsmfzqXrTb
+BBBbpQsdXsrJpKJdtCTNhCBsmfzqXrTb
 [-time-][--------random--------]
 ```
 
 ### Extra large id
 
 ```
-BFKdJmcFNpBXhNNrRscZkSZJXNhTmMmTHJRhrZMx
+BBBbpQsdNpBXhNNrRscZkSZJXNhTmMmTHJRhrZMx
 [-time-][------------random------------]
 ```
 
@@ -42,14 +42,14 @@ BFKdJmcFNpBXhNNrRscZkSZJXNhTmMmTHJRhrZMx
 
 |   | String length | Time resolution | Time bits | Random bits | Total bits |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| **Small**       | 16 characters | 6.6 ms | 40 | 40  | 80  |
-| **Medium**      | 24 characters | 6.6 ms | 40 | 80  | 120 |
-| **Large**       | 32 characters | 6.6 ms | 40 | 120 | 160 |
-| **Extra Large** | 40 characters | 6.6 ms | 40 | 160 | 200 |
+| **Small**       | 16 characters | 3.3 ms | 40 | 40  | 80  |
+| **Medium**      | 24 characters | 3.3 ms | 40 | 80  | 120 |
+| **Large**       | 32 characters | 3.3 ms | 40 | 120 | 160 |
+| **Extra Large** | 40 characters | 3.3 ms | 40 | 160 | 200 |
 
 ### Timestamp
 
-* The default 40 bit timestamp has approximately 6.6 millisecond resolution. That is, ids generated within the same 6.6 ms interval will have the same timestamp portion. It has a range of over 228 years before cycling, good until the year 2247 (starting from 2019).
+* The default 40 bit timestamp has approximately 3.3 millisecond resolution. That is, ids generated within the same 3.3 ms interval will have the same timestamp component. It has a range of over 114 years before cycling, good until the year 2133 (starting from 2019).
 * The time precision is configurable to increase or decrease the resolution, trading off random bits to do so. See [Adjustable time precision](#adjustable-time-precision).
 
 ### Random data
@@ -71,61 +71,50 @@ BFKdJmcFNpBXhNNrRscZkSZJXNhTmMmTHJRhrZMx
 
 ## Adjustable time precision
 
-The timestamp is based on the number of 100 nanosecond intervals (ticks) since a fixed epoch date of 2019-01-01, taken as a 56 bit (7 byte) integer which can store a range of over 228 years. (2^56 100 ns ticks = 7205759404 seconds = approximately 228.3 years)
+The timestamp is based on the number of 100 nanosecond intervals since a fixed epoch date of 2019-09-19, masked to the low 55 bits. This provides a range of just over 114 years. (100 ns * 2<sup>55</sup> = 3602879702 seconds = about 114.17 years)
 
-Then, depending on desired precision, anywhere from the high 4 bytes to all 7 bytes of that value are stored at the beginning of the id in big-endian order.
+Depending on the desired precision, the high 32, 40, or 48 bits of that value are stored at the beginning of the generated id in big-endian order.
 
 The number of random bits used in the id are adjusted depending on the precision to maintain a consistent overall string length.
 
-### Tick precision
-
-56 bit timestamp, 100 nanosecond resolution.
-
-|   | String length | Time resolution | Time bits | Random bits | Total bits |
-| --- | :---: | :---: | :---: | :---: | :---: |
-| **Small**       | 16 characters | 100 ns | 56 | 24  | 80  |
-| **Medium**      | 24 characters | 100 ns | 56 | 64  | 120 |
-| **Large**       | 32 characters | 100 ns | 56 | 104 | 160 |
-| **Extra Large** | 40 characters | 100 ns | 56 | 144 | 200 |
-
 ### Microsecond precision
 
-48 bit timestamp, approximately 26 microsecond resolution. (100 ns * 2^8 = 25.6 us)
+48 bit timestamp, approximately 13 microsecond resolution. (100 ns * 2<sup>55</sup> / 2<sup>48</sup> = 12.8 us)
 
 |   | String length | Time resolution | Time bits | Random bits | Total bits |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| **Small**       | 16 characters | 26 us | 48 | 32  | 80  |
-| **Medium**      | 24 characters | 26 us | 48 | 72  | 120 |
-| **Large**       | 32 characters | 26 us | 48 | 112 | 160 |
-| **Extra Large** | 40 characters | 26 us | 48 | 152 | 200 |
+| **Small**       | 16 characters | 13 us | 48 | 32  | 80  |
+| **Medium**      | 24 characters | 13 us | 48 | 72  | 120 |
+| **Large**       | 32 characters | 13 us | 48 | 112 | 160 |
+| **Extra Large** | 40 characters | 13 us | 48 | 152 | 200 |
 
 ### Millisecond precision (default)
 
-40 bit timestamp, approximately 6.6 millisecond resolution. (100 ns * 2^16 = 6.5536 ms)
+40 bit timestamp, approximately 3.3 millisecond resolution. (100 ns * 2<sup>55</sup> / 2<sup>40</sup> = 3.2768 ms)
 
 |   | String length | Time resolution | Time bits | Random bits | Total bits |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| **Small**       | 16 characters | 6.6 ms | 40 | 40  | 80  |
-| **Medium**      | 24 characters | 6.6 ms | 40 | 80  | 120 |
-| **Large**       | 32 characters | 6.6 ms | 40 | 120 | 160 |
-| **Extra Large** | 40 characters | 6.6 ms | 40 | 160 | 200 |
+| **Small**       | 16 characters | 3.3 ms | 40 | 40  | 80  |
+| **Medium**      | 24 characters | 3.3 ms | 40 | 80  | 120 |
+| **Large**       | 32 characters | 3.3 ms | 40 | 120 | 160 |
+| **Extra Large** | 40 characters | 3.3 ms | 40 | 160 | 200 |
 
 ### Second precision
 
-32 bit timestamp, approximately 1.7 second resolution. (100 ns * 2^24 = 1.6777216 s)
+32 bit timestamp, approximately 0.84 second resolution. (100 ns * 2<sup>55</sup> / 2<sup>32</sup> = 0.8388608 s)
 
 |   | String length | Time resolution | Time bits | Random bits | Total bits |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| **Small**       | 16 characters | 1.7 s | 32 | 48  | 80  |
-| **Medium**      | 24 characters | 1.7 s | 32 | 88  | 120 |
-| **Large**       | 32 characters | 1.7 s | 32 | 128 | 160 |
-| **Extra Large** | 40 characters | 1.7 s | 32 | 168 | 200 |
+| **Small**       | 16 characters | 0.84 s | 32 | 48  | 80  |
+| **Medium**      | 24 characters | 0.84 s | 32 | 88  | 120 |
+| **Large**       | 32 characters | 0.84 s | 32 | 128 | 160 |
+| **Extra Large** | 40 characters | 0.84 s | 32 | 168 | 200 |
 
 ### Notes
 
 * Time precision is subject to the system clock resolution of the target environment. The extra bits for a more precise timestamp will be wasted if the system clock does not update at that resolution.
 * The precision options do not affect the initial bits of the timestamp. The same first 32 bits of the timestamp are used regardless of precison, so the first 6 characters (30 encoded bits) of an id will be consistent under any precision option.
-* With Fable, the Tick and Microsecond precision options are not supported and will fall back to Millisecond precision.
+* With Fable, the Microsecond precision option is not supported and will fall back to Millisecond precision.
 
 ## Usage
 

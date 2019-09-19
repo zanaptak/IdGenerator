@@ -2,7 +2,6 @@ namespace Zanaptak.IdGenerator
 
 open System
 
-[< AutoOpen >]
 module private Buffer =
 
 #if FABLE_COMPILER
@@ -16,7 +15,7 @@ module private Buffer =
 #endif
 #endif
 
-  type BufferedCryptoRandom ( bufferSize : uint16 ) =
+  type CryptoRandom ( bufferSize : uint16 ) =
     let bufferSize = int bufferSize
     let lockObj = obj()
 
@@ -24,10 +23,11 @@ module private Buffer =
     let mutable bufferPos = bufferSize
 
 #if FABLE_COMPILER
-    let fillRandomBytes =
 #if ZANAPTAK_NODEJS_CRYPTO
+    let fillRandomBytes =
       fun ( bytes : byte array ) -> crypto?randomFillSync( bytes )
 #else
+    let fillRandomBytes =
       if isNotTypeofUndefined window && window?crypto && window?crypto?getRandomValues then
         fun ( bytes : byte array ) -> window?crypto?getRandomValues( bytes )
       else
@@ -57,24 +57,22 @@ module private Buffer =
 open System.Runtime.InteropServices
 
 type IdSize =
-  /// 16 character, 80 bit id (with 40 random bits)
+  /// 16 character, 80 bit id (with 40 random bits). This is the default size.
   | Small = 0
-  /// 24 character, 120 bit id (with 80 random bits)
+  /// 24 character, 120 bit id (with 80 random bits).
   | Medium = 1
-  /// 32 character, 160 bit id (with 120 random bits)
+  /// 32 character, 160 bit id (with 120 random bits).
   | Large = 2
-  /// 40 character, 200 bit id (with 160 random bits)
+  /// 40 character, 200 bit id (with 160 random bits).
   | ExtraLarge = 3
 
 type IdTimePrecision =
-  /// 40 bit time precision, 6.6 millisecond resolution. This is the default precision.
-  | Millisecond = 0
-  /// 56 bit time precision, 100 nanosecond resolution. Decreases amount of random data by 16 bits from the default.
-  | Tick = 1
-  /// 48 bit time precision, 26 microsecond resolution. Decreases amount of random data by 8 bits from the default.
+  /// 32 bit time precision, 0.84 second resolution. Increases amount of random data by 8 bits from the default.
+  | Second = 0
+  /// 40 bit time precision, 3.3 millisecond resolution. This is the default precision.
+  | Millisecond = 1
+  /// 48 bit time precision, 13 microsecond resolution. Decreases amount of random data by 8 bits from the default.
   | Microsecond = 2
-  /// 32 bit time precision, 1.7 second resolution. Increases amount of random data by 8 bits from the default.
-  | Second = 3
 
 ///<summary>Creates a string id generator.</summary>
 ///<param name='size'>Specifies the size of id this generator instance will create. Default is IdSize.Small.</param>
@@ -88,18 +86,18 @@ type IdGenerator
     , [< Optional ; DefaultParameterValue( 10 ) >] bufferCount : int
   ) =
 
-  static let epochTicks = DateTimeOffset( 2019 , 1 , 1 , 0 , 0 , 0 , 0 , TimeSpan.Zero ).Ticks
+  static let epochTicks = DateTimeOffset( 2019 , 9 , 19 , 0 , 0 , 0 , 0 , TimeSpan.Zero ).Ticks
   static let base32 = Zanaptak.BinaryToTextEncoding.Base32( "BCDFHJKMNPQRSTXZbcdfhjkmnpqrstxz" )
 
+  // timeBitShift (low bits to discard) , timeByteCount , randomByteAdjust
+  // timeBitShift + (8 * timeByteCount) = using 55 bits of the tick value = 114 year range
   static let getCalcParams ( timePrecision : IdTimePrecision ) =
-    // timeBitShift , timeByteCount , randomByteAdjust
     match timePrecision with
-#if ! FABLE_COMPILER
-    | IdTimePrecision.Tick -> 0 , 7 , -2
-    | IdTimePrecision.Microsecond -> 8 , 6 , -1
-#endif
-    | IdTimePrecision.Second -> 24 , 4 , 1
-    | _ -> 16 , 5 , 0 // default IdTimePrecision.Millisecond
+    #if ! FABLE_COMPILER
+    | IdTimePrecision.Microsecond -> 7 , 6 , -1 // not supported in Fable
+    #endif
+    | IdTimePrecision.Second -> 23 , 4 , 1
+    | _ -> 15 , 5 , 0 // default IdTimePrecision.Millisecond
 
   let timeBitShift , timeByteCount , randomByteAdjust = getCalcParams timePrecision
 
@@ -120,7 +118,7 @@ type IdGenerator
 
   let totalByteCount = timeByteCount + randomByteCount
 
-  let cryptoRng = BufferedCryptoRandom ( ( max bufferCount 10 ) * randomByteCount |> min ( int UInt16.MaxValue ) |> uint16 )
+  let cryptoRng = Buffer.CryptoRandom ( ( max bufferCount 10 ) * randomByteCount |> min ( int UInt16.MaxValue ) |> uint16 )
 
   /// Returns a string id constructed using the current system time and additional random data.
   member this.Next() =
