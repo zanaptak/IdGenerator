@@ -2,7 +2,10 @@ namespace Zanaptak.IdGenerator
 
 open System
 
-module private Buffer =
+module private Internal =
+
+  let [< Literal >] EpochTicks = 637044480000000000L // DateTimeOffset( 2019 , 9 , 19 , 0 , 0 , 0 , 0 , TimeSpan.Zero ).Ticks
+  let base32 = Zanaptak.BinaryToTextEncoding.Base32( "BCDFHJKMNPQRSTXZbcdfhjkmnpqrstxz" )
 
 #if FABLE_COMPILER
   open Fable.Core
@@ -57,9 +60,9 @@ module private Buffer =
 open System.Runtime.InteropServices
 
 type IdSize =
-  /// 16 character, 80 bit id (with 40 random bits). This is the default size.
+  /// 16 character, 80 bit id (with 40 random bits).
   | Small = 0
-  /// 24 character, 120 bit id (with 80 random bits).
+  /// 24 character, 120 bit id (with 80 random bits). This is the default size.
   | Medium = 1
   /// 32 character, 160 bit id (with 120 random bits).
   | Large = 2
@@ -75,19 +78,16 @@ type IdTimePrecision =
   | Microsecond = 2
 
 ///<summary>Creates a string id generator.</summary>
-///<param name='size'>Specifies the size of id this generator instance will create. Default is IdSize.Small.</param>
+///<param name='size'>Specifies the size of id this generator instance will create. Default is IdSize.Medium.</param>
 ///<param name='timePrecision'>Specifies the precision of the timestamp portion of generated ids. Default is IdTimePrecision.Millisecond.</param>
 ///<param name='bufferCount'>Specifies the number of ids that the generator will buffer random data for between calls to the cryptographic RNG source.
 /// Minimum and default value is 10 ids. Maximum buffer size is 65535 bytes regardless of id count.</param>
 type IdGenerator
   (
-    [< Optional ; DefaultParameterValue( IdSize.Small ) >] size : IdSize
+    [< Optional ; DefaultParameterValue( IdSize.Medium ) >] size : IdSize
     , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision
     , [< Optional ; DefaultParameterValue( 10 ) >] bufferCount : int
   ) =
-
-  static let epochTicks = DateTimeOffset( 2019 , 9 , 19 , 0 , 0 , 0 , 0 , TimeSpan.Zero ).Ticks
-  static let base32 = Zanaptak.BinaryToTextEncoding.Base32( "BCDFHJKMNPQRSTXZbcdfhjkmnpqrstxz" )
 
   // timeBitShift (low bits to discard) , timeByteCount , randomByteAdjust
   // timeBitShift + (8 * timeByteCount) = using 55 bits of the tick value = 114 year range
@@ -101,8 +101,8 @@ type IdGenerator
 
   let timeBitShift , timeByteCount , randomByteAdjust = getCalcParams timePrecision
 
-  let fillTimeBytesInArray ( bytes : byte array ) ( timestamp : DateTimeOffset ) =
-    let time = ( timestamp.UtcTicks - epochTicks ) >>> timeBitShift
+  let fillTimeBytesInArray ( bytes : byte array ) ( timestampTicks : int64 ) =
+    let time = ( timestampTicks - Internal.EpochTicks ) >>> timeBitShift
     for i in 0 .. timeByteCount - 1 do
       bytes.[ i ] <- time >>> ( timeByteCount - i - 1 ) * 8 |> byte
 
@@ -111,40 +111,52 @@ type IdGenerator
       match size with
       | IdSize.ExtraLarge -> 20
       | IdSize.Large -> 15
-      | IdSize.Medium -> 10
-      | _ -> 5 // default IdSize.Small
+      | IdSize.Small -> 5
+      | _ -> 10 // default IdSize.Medium
     )
     + randomByteAdjust
 
   let totalByteCount = timeByteCount + randomByteCount
 
-  let cryptoRng = Buffer.CryptoRandom ( ( max bufferCount 10 ) * randomByteCount |> min ( int UInt16.MaxValue ) |> uint16 )
+  let cryptoRng = Internal.CryptoRandom ( ( max bufferCount 10 ) * randomByteCount |> min ( int UInt16.MaxValue ) |> uint16 )
 
   /// Returns a string id constructed using the current system time and additional random data.
   member this.Next() =
     let bytes = Array.create totalByteCount 0uy
     cryptoRng.NextBytes bytes timeByteCount randomByteCount
-    fillTimeBytesInArray bytes DateTimeOffset.UtcNow
-    base32.Encode( bytes )
+    fillTimeBytesInArray bytes DateTimeOffset.UtcNow.UtcTicks
+    Internal.base32.Encode( bytes )
 
-  /// Returns a string id constructed using the provided time value and additional random data.
-  member this.Next( timestamp : DateTimeOffset ) =
+  /// Returns a string id constructed using the provided date value and additional random data.
+  member this.Next( date : DateTimeOffset ) =
     let bytes = Array.create totalByteCount 0uy
     cryptoRng.NextBytes bytes timeByteCount randomByteCount
-    fillTimeBytesInArray bytes timestamp
-    base32.Encode( bytes )
+    fillTimeBytesInArray bytes date.UtcTicks
+    Internal.base32.Encode( bytes )
 
-  /// Returns a DateTimeOffset of the timestamp that is encoded in the provided string id.
-  static member ExtractTimestamp( id : string , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision ) =
+  /// Returns a string id constructed using the provided ticks value and additional random data.
+  member this.Next( ticks : int64 ) =
+    let bytes = Array.create totalByteCount 0uy
+    cryptoRng.NextBytes bytes timeByteCount randomByteCount
+    fillTimeBytesInArray bytes ticks
+    Internal.base32.Encode( bytes )
+
+  /// Returns the ticks value of the timestamp that is encoded in the provided string id.
+  static member ExtractTicks( id : string , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision ) =
     try
       let timeBitShift , timeByteCount , _ = getCalcParams timePrecision
-      let timeBytes = base32.Decode id |> Array.take timeByteCount
+      let timeBytes = Internal.base32.Decode id |> Array.take timeByteCount
       let prefixBytes : byte array = Array.zeroCreate ( 8 - timeByteCount )
       let timeValue =
         Array.append prefixBytes timeBytes
         |> fun a -> if BitConverter.IsLittleEndian then Array.rev a else a
         |> fun a -> BitConverter.ToInt64( a , 0 )
       let ticks = timeValue <<< timeBitShift
-      DateTimeOffset( epochTicks + ticks , TimeSpan.Zero )
+      Internal.EpochTicks + ticks
     with
     | ex -> raise ( FormatException( "Invalid id" , ex ) )
+
+  /// Returns a DateTimeOffset of the timestamp that is encoded in the provided string id.
+  static member ExtractDate( id : string , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision ) =
+    let ticks = IdGenerator.ExtractTicks( id , timePrecision )
+    DateTimeOffset( ticks , TimeSpan.Zero )

@@ -15,7 +15,7 @@ BBBbpQsdtSqbSmrJ
 [-time-][random]
 ```
 
-### Medium id
+### Medium id (default)
 
 ```
 BBBbpQsdjMjrqhJxZPDhSstF
@@ -71,7 +71,7 @@ BBBbpQsdNpBXhNNrRscZkSZJXNhTmMmTHJRhrZMx
 
 ## Adjustable time precision
 
-The timestamp is based on the number of 100 nanosecond intervals since a fixed epoch date of 2019-09-19, masked to the low 55 bits. This provides a range of just over 114 years. (100 ns * 2<sup>55</sup> = 3602879702 seconds = about 114.17 years)
+The timestamp is based on the number of 100 nanosecond intervals (ticks) since a fixed epoch date of 2019-09-19 00:00:00 UTC, masked to the low 55 bits. This provides a range of just over 114 years. (100 ns * 2<sup>55</sup> = 3602879702 seconds = about 114.17 years)
 
 Depending on the desired precision, the high 32, 40, or 48 bits of that value are stored at the beginning of the generated id in big-endian order.
 
@@ -114,7 +114,10 @@ The number of random bits used in the id are adjusted depending on the precision
 
 * Time precision is subject to the system clock resolution of the target environment. The extra bits for a more precise timestamp will be wasted if the system clock does not update at that resolution.
 * The precision options do not affect the initial bits of the timestamp. The same first 32 bits of the timestamp are used regardless of precison, so the first 6 characters (30 encoded bits) of an id will be consistent under any precision option.
-* With Fable, the Microsecond precision option is not supported and will fall back to Millisecond precision.
+* In Fable, dates are subject to the 1 ms JavaScript date resolution rather than 100 ns tick resolution of .NET. Therefore, in Fable:
+  * The Microsecond precision option is not supported; Millisecond will be used instead.
+  * Extracting dates from ids will not produce an exact result since conversion to milliseconds will discard up to 9999 ticks of the encoded value. Alternatively, the exact tick value can be extracted accurately with `ExtractTicks`, for parity with .NET (but will still lose the extra tick precision if subsequently converted to a date in Fable).
+
 
 ## Usage
 
@@ -136,13 +139,13 @@ var idGenerator = new IdGenerator();
 var myId = idGenerator.Next();
 
 // Get the timestamp from an id as a DateTimeOffset
-var timestamp = IdGenerator.ExtractTimestamp(myId);
+var date = IdGenerator.ExtractDate(myId);
 
-// Create a generator instance for Large ids
-var idGenLarge = new IdGenerator(IdSize.Large);
+// Create a generator instance for Small ids
+var idGenSmall = new IdGenerator(IdSize.Small);
 
 // Create a generator instance for Large ids using Microsecond time precision
-var idGenMicro = new IdGenerator(IdSize.Large, IdTimePrecision.Microsecond);
+var idGenLargeMicro = new IdGenerator(IdSize.Large, IdTimePrecision.Microsecond);
 
 // Create a generator that buffers 100 random data blocks between calls to the crypto RNG source
 var idBuffer = new IdGenerator(bufferCount: 100);
@@ -160,13 +163,13 @@ let idGenerator = IdGenerator()
 let myId = idGenerator.Next()
 
 // Get the timestamp from an id as a DateTimeOffset
-let timestamp = IdGenerator.ExtractTimestamp(myId)
+let date = IdGenerator.ExtractDate(myId)
 
-// Create a generator instance for Large ids
-let idGenLarge = IdGenerator(IdSize.Large)
+// Create a generator instance for Small ids
+let idGenSmall = IdGenerator(IdSize.Small)
 
 // Create a generator instance for Large ids using Microsecond time precision
-let idGenMicro = IdGenerator(IdSize.Large, IdTimePrecision.Microsecond)
+let idGenLargeMicro = IdGenerator(IdSize.Large, IdTimePrecision.Microsecond)
 
 // Create a generator that buffers 100 random data blocks between calls to the crypto RNG source
 let idBuffer = IdGenerator(bufferCount=100)

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
     <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>zanaptak</Authors>
     <AssemblyName>Zanaptak.IdGenerator</AssemblyName>
     <Product>Zanaptak.IdGenerator</Product>
