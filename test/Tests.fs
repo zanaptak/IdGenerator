@@ -170,6 +170,9 @@ let commonTests =
     testCase "Millisecond precision, 1 ms separated timestamps" <| fun () ->
       testPrecisionWithMilliIntervals IdTimePrecision.Millisecond 1L 999
 
+    testCase "Microsecond precision, 1 ms separated timestamps" <| fun () ->
+      testPrecisionWithMilliIntervals IdTimePrecision.Microsecond 1L 999
+
     testCase "Second precision bits from ticks" <| fun () ->
 
       let precision = IdTimePrecision.Second
@@ -229,6 +232,44 @@ let commonTests =
 
       // Changed high bit inside precision range, should resolve to different timestamp
       let ticksHiChange = 0b00011000_00111111_11111111_11111111_11111111_11111111_10000000_00000000L + epochTicks
+
+      let gen = IdGenerator( timePrecision = precision )
+
+      let idExactBits = gen.Next ticksExactBits
+      let idOutsideBits = gen.Next ticksOutsideBits
+      let idLoChange = gen.Next ticksLoChange
+      let idHiChange = gen.Next ticksHiChange
+
+      let extractExactBits = IdGenerator.ExtractTicks( idExactBits , precision )
+      let extractOutsideBits = IdGenerator.ExtractTicks( idOutsideBits , precision )
+      let extractLoChange = IdGenerator.ExtractTicks( idLoChange , precision )
+      let extractHiChange = IdGenerator.ExtractTicks( idHiChange , precision )
+
+      Expect.equal extractOutsideBits extractExactBits "extra should equal exact"
+      Expect.notEqual extractLoChange extractExactBits "low change should not equal exact"
+      Expect.notEqual extractHiChange extractExactBits "high change should not equal exact"
+
+    testCase "Microsecond precision bits from ticks" <| fun () ->
+
+      let precision = IdTimePrecision.Microsecond
+
+      // Set up artificial timestamps to be encoded.
+      // We add the epochTicks, since encoder will subtract them internally, resulting in our artificial timestamp to be encoded.
+      // Differing bits outside the precision range should not change the encoded timestamp.
+      // Differing bits inside the precision range should change the encoded timestamp.
+      // It doesn't matter that we are outside the 114 year window, it will get masked and we only care about the results relative to each other, not whether they match the original.
+
+      // Bits representing the exact precision range expected to be encoded
+      let ticksExactBits = 0b00011000_01111111_11111111_11111111_11111111_11111111_11111111_10000000L + epochTicks
+
+      // Extra bits outside precision range, should resolve to same timestamp as exact
+      let ticksOutsideBits = 0b00011000_11111111_11111111_11111111_11111111_11111111_11111111_11111111L + epochTicks
+
+      // Changed low bit inside precision range, should resolve to different timestamp
+      let ticksLoChange = 0b00011000_01111111_11111111_11111111_11111111_11111111_11111111_00000000L + epochTicks
+
+      // Changed high bit inside precision range, should resolve to different timestamp
+      let ticksHiChange = 0b00011000_00111111_11111111_11111111_11111111_11111111_11111111_10000000L + epochTicks
 
       let gen = IdGenerator( timePrecision = precision )
 

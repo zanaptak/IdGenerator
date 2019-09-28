@@ -1,6 +1,6 @@
 # IdGenerator
 
-A unique id generator for .NET and Fable, using timestamp plus random data, with multiple strength and precision options. Flexible alternative to UUID/GUID.
+A unique id generator for .NET and [Fable](https://fable.io/), using timestamp plus random data, with multiple strength and precision options. Flexible alternative to UUID/GUID.
 
 ## Overview
 
@@ -113,10 +113,10 @@ The number of random bits used in the id are adjusted depending on the precision
 ### Notes
 
 * Time precision is subject to the system clock resolution of the target environment. The extra bits for a more precise timestamp will be wasted if the system clock does not update at that resolution.
-* The precision options do not affect the initial bits of the timestamp. The same first 32 bits of the timestamp are used regardless of precison, so the first 6 characters (30 encoded bits) of an id will be consistent under any precision option.
-* In Fable, dates are subject to the 1 ms JavaScript date resolution rather than 100 ns tick resolution of .NET. Therefore, in Fable:
-  * The Microsecond precision option is not supported; Millisecond will be used instead.
-  * Extracting dates from ids will not produce an exact result since conversion to milliseconds will discard up to 9999 ticks of the encoded value. Alternatively, the exact tick value can be extracted accurately with `ExtractTicks`, for parity with .NET (but will still lose the extra tick precision if subsequently converted to a date in Fable).
+* The precision options do not affect the initial bits of the timestamp. The same first 32 bits of the timestamp are used regardless of precision, so the first 6 characters (30 encoded bits) of an id will be consistent under any precision option.
+* In Fable, timestamps are subject to the 1 ms date resolution of JavaScript rather than the 100 ns tick resolution of .NET. Therefore, in Fable:
+  * The Microsecond precision option has reduced effectiveness since multiple 13 us intervals can resolve to the same 1 ms timestamp.
+  * Extracting dates from ids will not produce an exact result since conversion to milliseconds will discard up to 9999 ticks of the encoded value. The exact tick value can be extracted accurately with `ExtractTicks`, but will still lose the extra tick precision if subsequently converted to a date in Fable.
 
 
 ## Usage
@@ -148,7 +148,7 @@ var idGenSmall = new IdGenerator(IdSize.Small);
 var idGenLargeMicro = new IdGenerator(IdSize.Large, IdTimePrecision.Microsecond);
 
 // Create a generator that buffers 100 random data blocks between calls to the crypto RNG source
-var idBuffer = new IdGenerator(bufferCount: 100);
+var idGenWithBuffer = new IdGenerator(bufferCount: 100);
 ```
 
 ### F#
@@ -172,5 +172,5 @@ let idGenSmall = IdGenerator(IdSize.Small)
 let idGenLargeMicro = IdGenerator(IdSize.Large, IdTimePrecision.Microsecond)
 
 // Create a generator that buffers 100 random data blocks between calls to the crypto RNG source
-let idBuffer = IdGenerator(bufferCount=100)
+let idGenWithBuffer = IdGenerator(bufferCount=100)
 ```
