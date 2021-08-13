@@ -1,11 +1,13 @@
-# IdGenerator
+# Zanaptak.IdGenerator
 
-A unique id generator for .NET and [Fable](https://fable.io/), using timestamp plus random data, with multiple strength and precision options. Flexible alternative to UUID/GUID.
+[![GitHub](https://img.shields.io/badge/-github-gray?logo=github)](https://github.com/zanaptak/IdGenerator) [![NuGet](https://img.shields.io/nuget/v/Zanaptak.IdGenerator?logo=nuget)](https://www.nuget.org/packages/Zanaptak.IdGenerator)
+
+A unique id generator for [.NET](https://dotnet.microsoft.com/) and [Fable](https://fable.io/), using timestamp plus random data, with multiple strength and precision options. Flexible alternative to UUID/GUID.
 
 ## Overview
 
 Generates universally unique string ids consisting of a sortable timestamp component followed by randomly generated data. The generator can be configured for different size and precision levels.
- 
+
 ## Examples
 
 ### Small id
@@ -62,7 +64,6 @@ BBBbpQsdNpBXhNNrRscZkSZJXNhTmMmTHJRhrZMx
 ### String format
 
 * The id is formatted as a base 32 encoded string; each text character represents 5 bits of binary data.
-  * No binary version is provided. The simplicity and ubiquity of a canonical string format is favored over the space savings of a binary representation.
 * Custom base 32 character set consisting of: `BCDFHJKMNPQRSTXZbcdfhjkmnpqrstxz`
   * Digits and several confusable characters are excluded.
   * Vowels and vowel-like characters are excluded to reduce the chance of accidental word patterns.

@@ -9,16 +9,15 @@
     <AssemblyName>Zanaptak.IdGenerator</AssemblyName>
     <Product>Zanaptak.IdGenerator</Product>
     <PackageId>Zanaptak.IdGenerator</PackageId>
-    <RepositoryUrl>https://github.com/zanaptak/IdGenerator.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/zanaptak/IdGenerator</PackageProjectUrl>
-    <PackageReleaseNotes>https://github.com/zanaptak/IdGenerator/releases</PackageReleaseNotes>
+    <PackageReleaseNotes>https://github.com/zanaptak/IdGenerator/blob/main/CHANGELOG.md#040-2019-09-28</PackageReleaseNotes>
     <PackageTags>unique;id;generator;identifier;.net;fable</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Description>A unique id generator for .NET and Fable, using timestamp plus random data, with multiple strength and precision options. Flexible alternative to UUID/GUID.</Description>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,6 +34,7 @@
 
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="4.3.4" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
