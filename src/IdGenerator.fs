@@ -129,11 +129,24 @@ type IdGenerator private ( dummy : unit , size : IdSize , timePrecision : IdTime
     ///<param name='bufferCount'>Specifies the number of ids that the generator will buffer random data for between calls to the cryptographic RNG source.
     /// Minimum and default value is 10 ids. Maximum buffer size is 65536 bytes regardless of id count.</param>
     new
+        #if ! FABLE_COMPILER
         (
             [< Optional ; DefaultParameterValue( IdSize.Medium ) >] size : IdSize
             , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision
             , [< Optional ; DefaultParameterValue( 10 ) >] bufferCount : int
-        ) = IdGenerator( () , size , timePrecision , bufferCount )
+        ) =
+        #else
+        (
+            ?size : IdSize
+            , ?timePrecision : IdTimePrecision
+            , ?bufferCount : int
+        ) =
+        let size = defaultArg size IdSize.Medium
+        let timePrecision = defaultArg timePrecision IdTimePrecision.Millisecond
+        let bufferCount = defaultArg bufferCount 10
+        #endif
+
+        IdGenerator( () , size , timePrecision , bufferCount )
 
     /// Returns a binary id constructed using the provided ticks value and additional random data.
     member this.NextBinary( ticks : int64 ) =
@@ -185,7 +198,19 @@ type IdGenerator private ( dummy : unit , size : IdSize , timePrecision : IdTime
 
     /// Returns the ticks value of the timestamp that is encoded in the provided binary id.
     /// Raises an exception if the input id is not valid.
-    static member ExtractTicks( binaryId : byte array , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision ) =
+    static member ExtractTicks
+        #if ! FABLE_COMPILER
+        (
+            binaryId : byte array
+            , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision
+        ) =
+        #else
+        (
+            binaryId : byte array
+            , ?timePrecision : IdTimePrecision
+        ) =
+        let timePrecision = defaultArg timePrecision IdTimePrecision.Millisecond
+        #endif
         if Internal.isValidBinaryLength binaryId then
             try
                 let timeBitShift , timeByteCount , _ = getCalcParams timePrecision
@@ -203,19 +228,55 @@ type IdGenerator private ( dummy : unit , size : IdSize , timePrecision : IdTime
 
     /// Returns a DateTimeOffset of the timestamp that is encoded in the provided binary id.
     /// Raises an exception if the input id is not valid.
-    static member ExtractDate( binaryId : byte array , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision ) =
+    static member ExtractDate
+        #if ! FABLE_COMPILER
+        (
+            binaryId : byte array
+            , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision
+        ) =
+        #else
+        (
+            binaryId : byte array
+            , ?timePrecision : IdTimePrecision
+        ) =
+        let timePrecision = defaultArg timePrecision IdTimePrecision.Millisecond
+        #endif
         // ExtractTicks will validate input
         let ticks = IdGenerator.ExtractTicks( binaryId , timePrecision )
         DateTimeOffset( ticks , TimeSpan.Zero )
 
     /// Returns the ticks value of the timestamp that is encoded in the provided string id.
     /// Raises an exception if the input id is not valid.
-    static member ExtractTicks( stringId : string , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision ) =
+    static member ExtractTicks
+        #if ! FABLE_COMPILER
+        (
+            stringId : string
+            , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision
+        ) =
+        #else
+        (
+            stringId : string
+            , ?timePrecision : IdTimePrecision
+        ) =
+        let timePrecision = defaultArg timePrecision IdTimePrecision.Millisecond
+        #endif
         let bytes = IdGenerator.ConvertToBinary stringId
         IdGenerator.ExtractTicks( bytes , timePrecision )
 
     /// Returns a DateTimeOffset of the timestamp that is encoded in the provided string id.
     /// Raises an exception if the input id is not valid.
-    static member ExtractDate( stringId : string , [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision ) =
+    static member ExtractDate
+        #if ! FABLE_COMPILER
+        (
+            stringId : string ,
+            [< Optional ; DefaultParameterValue( IdTimePrecision.Millisecond ) >] timePrecision : IdTimePrecision
+        ) =
+        #else
+        (
+            stringId : string
+            , ?timePrecision : IdTimePrecision
+        ) =
+        let timePrecision = defaultArg timePrecision IdTimePrecision.Millisecond
+        #endif
         let ticks = IdGenerator.ExtractTicks( stringId , timePrecision )
         DateTimeOffset( ticks , TimeSpan.Zero )

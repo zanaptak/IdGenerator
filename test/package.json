@@ -1,15 +1,11 @@
 {
     "private": true,
+    "type": "module",
     "scripts": {
-        "build": "fable-splitter ../src/IdGenerator.fsproj -o bld --commonjs",
-        "testApp": "node bld/Program.js",
-        "pretest": "fable-splitter -c config.js",
-        "test": "mocha bld -t 10000"
+        "clean": "dotnet fable clean --outDir bld --yes",
+        "test": "dotnet fable --outDir bld --run mocha bld -t 10000"
     },
     "dependencies": {
-        "@babel/core": "^7.12.3",
-        "fable-compiler": "^2.13.0",
-        "fable-splitter": "^2.2.1",
-        "mocha": "^8.2.1"
+        "mocha": "^9.0.3"
     }
 }
