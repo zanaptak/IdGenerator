@@ -158,6 +158,42 @@ let commonTests =
             // Second not guaranteed exact due to precision
             Expect.isTrue ( extractTime.Second = time.Second || extractTime.Second + 1 = time.Second ) "Second should be within one"
 
+        testCase "timestamp round trip binary" <| fun () ->
+            let time = DateTimeOffset( 2021 , 3 , 4 , 5 , 6 , 7 , TimeSpan.Zero )
+            let theId = IdGenerator().NextBinary time
+            let extractTime = IdGenerator.ExtractDate theId
+            Expect.equal extractTime.Year time.Year "Year should be equal"
+            Expect.equal extractTime.Month time.Month "Month should be equal"
+            Expect.equal extractTime.Day time.Day "Day should be equal"
+            Expect.equal extractTime.Hour time.Hour "Hour should be equal"
+            Expect.equal extractTime.Minute time.Minute "Minute should be equal"
+            // Second not guaranteed exact due to precision
+            Expect.isTrue ( extractTime.Second = time.Second || extractTime.Second + 1 = time.Second ) "Second should be within one"
+
+        testCase "two string ids different" <| fun () ->
+            // infinitesimal chance of collision
+            let idGen = IdGenerator()
+            let id1 , id2 = idGen.Next() , idGen.Next()
+            Expect.notEqual id1 id2 ""
+
+        testCase "two binary ids different" <| fun () ->
+            // infinitesimal chance of collision
+            let idGen = IdGenerator()
+            let id1 , id2 = idGen.NextBinary() , idGen.NextBinary()
+            Expect.notEqual id1 id2 ""
+
+        testCase "string binary string round trip" <| fun () ->
+            let stringId = IdGenerator().Next()
+            let binaryId = IdGenerator.ConvertToBinary stringId
+            let stringIdRoundTrip = IdGenerator.ConvertToString binaryId
+            Expect.equal stringId stringIdRoundTrip ""
+
+        testCase "binary string binary round trip" <| fun () ->
+            let binaryId = IdGenerator().NextBinary()
+            let stringId = IdGenerator.ConvertToString binaryId
+            let binaryIdRoundTrip = IdGenerator.ConvertToBinary stringId
+            Expect.equal binaryId binaryIdRoundTrip ""
+
         testCase "Second precision, 2345 ms separated timestamps" <| fun () ->
             testPrecisionWithMilliIntervals IdTimePrecision.Second 2345L 999
 
